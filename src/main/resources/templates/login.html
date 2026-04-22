@@ -107,25 +107,93 @@
             font-weight: bold;
             border: 1px solid #ff4d4d;
         }
+        /* Pop-up design */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(10px);
+}
+.modal-content {
+    background: var(--glass);
+    padding: 40px;
+    border-radius: 30px;
+    border: 1px solid var(--primary);
+    text-align: center;
+    max-width: 400px;
+}
     </style>
 </head>
 <body>
+<div id="regModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2>NEW USER?</h2>
+        <p style="color: var(--primary); margin-bottom: 20px;">Create temporary credentials</p>
+        <input type="text" id="newU" placeholder="Username">
+        <input type="password" id="newP" placeholder="Password">
+        <button class="btn-login" onclick="saveUser()">Register</button>
+    </div>
+</div>
+<div class="login-card">
+    <h2>PORTAL LOGIN</h2>
 
-    <div class="login-card">
-        <h2>PORTAL LOGIN</h2>
-        
-        <div th:if="${error}" class="error-msg" th:text="${error}"></div>
-
-        <form action="/login" method="POST">
-            <div class="input-group">
-                <input type="text" name="username" placeholder="USERNAME" required autocomplete="off">
-            </div>
-            <div class="input-group">
-                <input type="password" name="password" placeholder="PASSWORD" required>
-            </div>
-            <button type="submit" class="btn-login">Start Examination</button>
-        </form>
+    <div class="input-group">
+        <input type="text" id="user" placeholder="USERNAME" required>
     </div>
 
+    <div class="input-group">
+        <input type="password" id="pass" placeholder="PASSWORD" required>
+    </div>
+
+    <button class="btn-login" onclick="checkLogin()">Start Examination</button>
+</div>
+<script>
+    window.onload = function() {
+    if (!sessionStorage.getItem('u')) {
+        document.getElementById('regModal').style.display = 'flex';
+    } else {
+        document.getElementById('regModal').style.display = 'none';
+    }
+}
+    // 1. Registration Logic: Window close hote hi ye data delete ho jayega
+    function saveUser() {
+    const u = document.getElementById('newU').value; // Username from popup
+    const p = document.getElementById('newP').value; // Password from popup
+    
+    if (u && p) {
+        // Save credentials temporarily (deleted when tab closes)
+        sessionStorage.setItem('u', u);
+        sessionStorage.setItem('p', p);
+
+        // Auto-fill login fields
+        document.getElementById('user').value = u;
+        document.getElementById('pass').value = p;
+
+        // Close popup
+        document.getElementById('regModal').style.display = 'none';
+
+        alert("Account created successfully! Please proceed to login.");
+    } else {
+        alert("Please enter both username and password.");
+    }
+}
+
+    // 2. Login Logic: Jo register kiya hai usse match karega
+    function checkLogin() {
+        const uIn = document.getElementById('user').value; // Login card ka username
+        const pIn = document.getElementById('pass').value; // Login card ka password
+        
+        const savedU = sessionStorage.getItem('u');
+        const savedP = sessionStorage.getItem('p');
+
+        if (uIn === savedU && pIn === savedP && savedU !== null) {
+            window.location.href = "/quiz"; // Success hone pe quiz page
+        } else {
+            alert("Wrong details!");
+        }
+    }
+</script>
 </body>
 </html>
