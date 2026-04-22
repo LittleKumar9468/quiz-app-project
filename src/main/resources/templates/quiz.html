@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Exam Portal</title>
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --secondary: #3a7bd5;
+            --bg: #050a18;
+            --glass: rgba(15, 23, 42, 0.8);
+            --pop-shadow: 0 10px 40px rgba(0, 210, 255, 0.2);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            margin: 0; display: flex; flex-direction: column; align-items: center;
+            overflow-x: hidden;
+        }
+
+        .header {
+            position: sticky; top: 0; width: 100%; z-index: 1000;
+            background: rgba(5, 10, 24, 0.95); backdrop-filter: blur(15px);
+            padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 1.6rem; font-weight: 900; color: var(--primary);
+            border: 2px solid var(--primary); padding: 10px 35px; border-radius: 50px;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+        }
+
+        /* Pure screen cover karne ke liye width badha di */
+        .container { 
+            width: 98%; 
+            max-width: 1400px; 
+            margin-top: 30px; 
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        /* Question Card Pop Effect */
+        .q-card {
+            background: var(--glass); border-radius: 30px; padding: 45px;
+            margin-bottom: 40px; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .q-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            border-color: rgba(0, 210, 255, 0.3);
+            box-shadow: var(--pop-shadow);
+        }
+
+        .q-text { font-size: 1.5rem; font-weight: 700; margin-bottom: 35px; color: #fff; }
+
+        .options-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; /* 2x2 layout for pop look */
+            gap: 20px; 
+        }
+
+        @media (max-width: 768px) { .options-grid { grid-template-columns: 1fr; } }
+
+        /* Options Pop Effect */
+        .option-label {
+            display: block; cursor: pointer;
+            padding: 25px; background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+            font-size: 1.15rem; transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+
+        .option-label:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--primary);
+            transform: scale(1.03); /* Hover par pop hoga */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        input[type="radio"] { display: none; }
+
+        /* Selected Option Style */
+        input[type="radio"]:checked ~ .option-content {
+            color: var(--primary); font-weight: 800;
+        }
+
+        .submit-container { margin: 60px 0 120px 0; text-align: center; }
+
+        .btn-submit {
+            width: 100%; max-width: 600px; padding: 30px; border-radius: 25px; border: none;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white; font-size: 1.6rem; font-weight: 900; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 4px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 210, 255, 0.4);
+        }
+
+        .btn-submit:hover { 
+            transform: scale(1.05); 
+            letter-spacing: 6px;
+            box-shadow: 0 15px 50px rgba(0, 210, 255, 0.6);
+        }
+
+        .warning-bg { background: radial-gradient(circle, #600, #050a18) !important; animation: shake 0.5s infinite; }
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -2px); } 100% { transform: translate(1px, 1px); } }
+    </style>
+
+    <script>
+        // Tab Switch Protection
+        let switches = 0;
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                switches++;
+                if (switches >= 2) {
+                    alert("Security Violation: Test auto-submitting.");
+                    document.getElementById("examForm").submit();
+                } else {
+                    alert("WARNING: DO NOT SWITCH TABS! (Final Warning)");
+                }
+            }
+        });
+
+        // --- TIMER: START FROM 2 MIN (120 SEC) ---
+        let time = 120; 
+        const timerTask = setInterval(() => {
+            if (time <= 0) {
+                clearInterval(timerTask);
+                document.getElementById("examForm").submit();
+            }
+            let m = Math.floor(time / 60);
+            let s = time % 60;
+            document.getElementById("timer").textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            if (time <= 15) document.body.classList.add("warning-bg");
+            time--;
+        }, 1000);
+
+        // Selection Visuals
+        function selectOption(labelElement) {
+            const card = labelElement.closest('.options-grid');
+            card.querySelectorAll('.option-label').forEach(l => {
+                l.style.background = 'rgba(255,255,255,0.04)';
+                l.style.borderColor = 'rgba(255,255,255,0.1)';
+                l.style.boxShadow = 'none';
+            });
+            
+            labelElement.style.background = 'rgba(0, 210, 255, 0.15)';
+            labelElement.style.borderColor = '#00d2ff';
+            labelElement.style.boxShadow = '0 0 20px rgba(0, 210, 255, 0.2)';
+        }
+    </script>
+</head>
+<body>
+
+    <div class="header">
+        <span class="timer-display" id="timer">02:00</span>
+    </div>
+
+    <div class="container">
+        <form id="examForm" action="/submit" method="POST">
+            <div th:each="q, state : ${questions}" class="q-card">
+                <div class="q-text" th:text="'Q' + ${state.index + 1} + '. ' + ${q.text}"></div>
+                
+                <div class="options-grid">
+                    <label class="option-label" onclick="selectOption(this)">
+                        <input type="radio" th:name="${q.id}" value="A">
+                        <span class="option-content">A. </span><span th:text="${q.a}"></span>
+                    </label>
+                    <label class="option-label" onclick="selectOption(this)">
+                        <input type="radio" th:name="${q.id}" value="B">
+                        <span class="option-content">B. </span><span th:text="${q.b}"></span>
+                    </label>
+                    <label class="option-label" onclick="selectOption(this)">
+                        <input type="radio" th:name="${q.id}" value="C">
+                        <span class="option-content">C. </span><span th:text="${q.c}"></span>
+                    </label>
+                    <label class="option-label" onclick="selectOption(this)">
+                        <input type="radio" th:name="${q.id}" value="D">
+                        <span class="option-content">D. </span><span th:text="${q.d}"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="submit-container">
+                <button type="submit" class="btn-submit">Submit Your Final Exam</button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>
