@@ -24,7 +24,7 @@ public class LoginController {
         if ("LITTLE789".equals(username) && "HELLO@4589..".equals(password)) {
             return "redirect:/quiz"; // Sahi password pe Quiz par bhej dega
         } else {
-            model.addAttribute("error", "Galti kar di bhai! Sahi details daal.");
+            model.addAttribute("error", "Wrong Details.");
             return "login"; // Galat password pe wapas login page
         }
     }
